@@ -1,3 +1,5 @@
+
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import ChatWorkspace from '../../components/chat/ChatWorkspace';
@@ -9,27 +11,10 @@ function WorkDetail() {
   const { workId } = useParams();
   const navigate = useNavigate();
 
+  // Preview is hidden when the page first opens.
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
   const work = mockWorks.find((item) => item.id === workId);
-
-  if (!work) {
-    return (
-      <section className="work-detail-page">
-        <div className="empty-page">
-          <h1>Work not found</h1>
-
-          <p>The requested work could not be found.</p>
-
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => navigate('/work')}
-          >
-            Back to Work
-          </button>
-        </div>
-      </section>
-    );
-  }
 
   const planSteps = [
     {
@@ -52,6 +37,25 @@ function WorkDetail() {
     },
   ];
 
+  if (!work) {
+    return (
+      <section className="work-detail-page">
+        <div className="empty-page">
+          <h1>Work not found</h1>
+          <p>The requested work could not be found.</p>
+
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => navigate('/work')}
+          >
+            Back to Work
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="work-detail-page">
       <div className="work-detail-header">
@@ -61,7 +65,7 @@ function WorkDetail() {
             className="back-button"
             onClick={() => navigate('/work')}
           >
-            ← Back to Work
+            &larr; Back to Work
           </button>
 
           <div className="work-detail-title">
@@ -79,49 +83,67 @@ function WorkDetail() {
         </div>
 
         <div className="work-detail-actions">
-          <button type="button" className="secondary-button">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() =>
+              window.alert('Pause Work will be implemented later.')
+            }
+          >
             Pause
           </button>
 
-          <button type="button" className="danger-button">
+          <button
+            type="button"
+            className="danger-button"
+            onClick={() =>
+              window.alert('Stop Work will be implemented later.')
+            }
+          >
             Stop Work
           </button>
         </div>
       </div>
 
-      <div className="work-detail-body">
+      <div
+        className={`work-detail-body ${
+          isPreviewOpen ? 'work-detail-body-with-preview' : ''
+        }`}
+      >
         <div className="work-chat-area">
-          <ChatWorkspace />
+          <ChatWorkspace
+            onViewPlan={() => setIsPreviewOpen(true)}
+            placeholder="Continue this work or ask In0 a question..."
+          />
         </div>
 
-        <PreviewPanel title="Work Plan" mode="plan">
-          <PlanPreview
-            progress={work.progress}
-            steps={planSteps}
-          />
+        {isPreviewOpen && (
+          <PreviewPanel
+            title="Work Plan"
+            mode="plan"
+            onClose={() => setIsPreviewOpen(false)}
+          >
+            <PlanPreview
+              progress={work.progress}
+              steps={planSteps}
+            />
 
-          <div className="preview-section">
-            <span className="preview-section-title">
-              Current Step
-            </span>
+            <div className="preview-section">
+              <span className="preview-section-title">
+                Current Step
+              </span>
 
-            <div className="preview-card">
-              <strong>Process HR task</strong>
+              <div className="preview-card">
+                <strong>Process HR task</strong>
 
-              <p>
-                The current step is being processed. Review the
-                conversation for the latest information.
-              </p>
-
-              <button
-                type="button"
-                className="secondary-button"
-              >
-                View Step Detail
-              </button>
+                <p>
+                  The current step is being processed. Review the
+                  conversation for the latest information.
+                </p>
+              </div>
             </div>
-          </div>
-        </PreviewPanel>
+          </PreviewPanel>
+        )}
       </div>
     </section>
   );
@@ -131,19 +153,14 @@ function getStatusLabel(status: string) {
   switch (status) {
     case 'in-progress':
       return 'In Progress';
-
     case 'waiting-approval':
       return 'Waiting for Approval';
-
     case 'completed':
       return 'Completed';
-
     case 'permission-required':
       return 'Permission Required';
-
     case 'conflict':
       return 'Conflict';
-
     default:
       return status;
   }
