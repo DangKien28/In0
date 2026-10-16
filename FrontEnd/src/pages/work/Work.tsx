@@ -1,127 +1,37 @@
+import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import Button from '../../components/common/Button';
+import PageHeader from '../../components/common/PageHeader';
+import WorkTable from '../../components/work/WorkTable';
 import { mockWorks } from '../../data/mockWorks';
-import type { Work as WorkType } from '../../types/work';
+import { useChatFlow } from '../../hooks/useChatFlow';
+import { paths } from '../../routes/paths';
 
 function Work() {
   const navigate = useNavigate();
+  const { startNewChat } = useChatFlow();
 
-  const handleOpenWork = (work: WorkType) => {
-    navigate(`/work/${work.id}`);
+  const handleCreateWork = () => {
+    startNewChat();
+    navigate(paths.chat);
   };
 
   return (
-    <section className="work-page">
-      <div className="page-header">
-        <div>
-          <h1>Work</h1>
-          <p>View and manage your HR work.</p>
-        </div>
+    <section className="mx-auto w-full max-w-[1560px] space-y-4 px-1 sm:px-2">
+      <PageHeader
+        title="Danh sách WORK"
+        description="Theo dõi toàn bộ các phiên làm việc và trạng thái điều phối của In0."
+        action={
+          <Button onClick={handleCreateWork}>
+            <Plus className="h-4 w-4" /> Tạo WORK mới
+          </Button>
+        }
+      />
 
-        <button
-          type="button"
-          className="primary-button"
-          onClick={() => navigate('/work/create')}
-        >
-          + Create Work
-        </button>
-      </div>
-
-      <div className="work-table-wrapper">
-        <table className="work-table">
-          <thead>
-            <tr>
-              <th>Work</th>
-              <th>Plugins</th>
-              <th>Progress &amp; Status</th>
-              <th>Time</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {mockWorks.map((work) => (
-              <tr key={work.id}>
-                <td>
-                  <button
-                    type="button"
-                    className="work-name-button"
-                    onClick={() => handleOpenWork(work)}
-                  >
-                    <span>{work.name}</span>
-                    <small>{work.id}</small>
-                  </button>
-                </td>
-
-                <td>
-                  <span className="plugin-text">HR System</span>
-                </td>
-
-                <td>
-                  <div className="table-progress">
-                    <div className="table-progress-row">
-                      <div className="table-progress-track">
-                        <div
-                          className="table-progress-value"
-                          style={{ width: `${work.progress}%` }}
-                        />
-                      </div>
-
-                      <span>{work.progress}%</span>
-                    </div>
-
-                    <span
-                      className={`work-status work-status-${work.status}`}
-                    >
-                      {getStatusLabel(work.status)}
-                    </span>
-                  </div>
-                </td>
-
-                <td>
-                  <span className="work-time">
-                    {work.updatedAt ?? '-'}
-                  </span>
-                </td>
-
-                <td>
-                  <button
-                    type="button"
-                    className="table-action"
-                    onClick={() => handleOpenWork(work)}
-                  >
-                    Open
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <WorkTable works={mockWorks} />
     </section>
   );
-}
-
-function getStatusLabel(status: WorkType['status']) {
-  switch (status) {
-    case 'in-progress':
-      return 'In Progress';
-
-    case 'waiting-approval':
-      return 'Waiting for Approval';
-
-    case 'completed':
-      return 'Completed';
-
-    case 'permission-required':
-      return 'Permission Required';
-
-    case 'conflict':
-      return 'Conflict';
-
-    default:
-      return status;
-  }
 }
 
 export default Work;

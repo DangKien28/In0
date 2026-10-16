@@ -1,0 +1,18 @@
+export const paths = {
+  home: '/',
+  chat: '/chat',
+  work: '/work',
+  workDetail: (workId: string) => `/work/${workId}`,
+  plugins: '/plugins',
+  agents: '/agents',
+  agentNew: '/agents/new',
+  agentDetail: (agentId: string) => `/agents/${agentId}`,
+  settings: '/settings',
+  knowledge: '/settings/knowledge',
+  policy: '/settings/policy',
+  help: '/help',
+  profile: '/profile',
+  welcome: '/welcome',
+  login: '/login',
+  resetPassword: '/reset-password',
+} as const;

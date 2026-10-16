@@ -1,169 +1,66 @@
+import { ArrowLeft, Play } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-
-import ChatWorkspace from '../../components/chat/ChatWorkspace';
-import PlanPreview from '../../components/preview/PlanPreview';
-import PreviewPanel from '../../components/preview/PreviewPanel';
-import { mockWorks } from '../../data/mockWorks';
+import Button from '../../components/common/Button';
+import WorkStepsTable from '../../components/work/WorkStepsTable';
+import { getWorkSteps, mockWorks } from '../../data/mockWorks';
+import { useChatFlow } from '../../hooks/useChatFlow';
+import { paths } from '../../routes/paths';
 
 function WorkDetail() {
   const { workId } = useParams();
   const navigate = useNavigate();
-
-  // Preview is hidden when the page first opens.
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const { openArtifact } = useChatFlow();
 
   const work = mockWorks.find((item) => item.id === workId);
 
-  const planSteps = [
-    {
-      id: 'step-1',
-      title: 'Collect input',
-      description: 'Gather the required HR files and information.',
-      status: 'completed' as const,
-    },
-    {
-      id: 'step-2',
-      title: 'Process HR task',
-      description: 'In0 is currently processing this step.',
-      status: 'running' as const,
-    },
-    {
-      id: 'step-3',
-      title: 'Review result',
-      description: 'Waiting for HR approval before continuing.',
-      status: 'waiting' as const,
-    },
-  ];
-
   if (!work) {
     return (
-      <section className="work-detail-page">
-        <div className="empty-page">
-          <h1>Work not found</h1>
-          <p>The requested work could not be found.</p>
-
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => navigate('/work')}
-          >
-            Back to Work
-          </button>
-        </div>
+      <section className="mx-auto w-full max-w-xl space-y-3 rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <h1 className="text-lg font-bold text-slate-900">
+          Không tìm thấy WORK
+        </h1>
+        <p className="text-xs text-slate-500">
+          WORK bạn yêu cầu không tồn tại hoặc đã bị xóa.
+        </p>
+        <Button onClick={() => navigate(paths.work)}>Quay lại danh sách</Button>
       </section>
     );
   }
 
+  const handleContinueChat = () => {
+    openArtifact(2);
+    navigate(paths.chat);
+  };
+
   return (
-    <section className="work-detail-page">
-      <div className="work-detail-header">
+    <section className="mx-auto w-full max-w-7xl space-y-4">
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <button
-            type="button"
-            className="back-button"
-            onClick={() => navigate('/work')}
+          <Link
+            to={paths.work}
+            className="mb-1 flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
           >
-            &larr; Back to Work
-          </button>
-
-          <div className="work-detail-title">
-            <div>
-              <h1>{work.name}</h1>
-              <span className="work-id">{work.id}</span>
-            </div>
-
-            <span
-              className={`work-status work-status-${work.status}`}
-            >
-              {getStatusLabel(work.status)}
-            </span>
-          </div>
+            <ArrowLeft className="h-3.5 w-3.5" /> Quay lại danh sách
+          </Link>
+          <h1 className="text-xl font-bold text-slate-900">{work.title}</h1>
+          <p className="mt-0.5 text-xs text-slate-500">
+            {work.statusText} • Tiến độ {work.currentStep} • {work.targetSystem}
+          </p>
         </div>
-
-        <div className="work-detail-actions">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() =>
-              window.alert('Pause Work will be implemented later.')
-            }
-          >
-            Pause
-          </button>
-
-          <button
-            type="button"
-            className="danger-button"
-            onClick={() =>
-              window.alert('Stop Work will be implemented later.')
-            }
-          >
-            Stop Work
-          </button>
-        </div>
+        <Button onClick={handleContinueChat} className="shrink-0 font-semibold">
+          <Play className="h-3.5 w-3.5" /> Tiếp tục phiên chat
+        </Button>
       </div>
 
-      <div
-        className={`work-detail-body ${
-          isPreviewOpen ? 'work-detail-body-with-preview' : ''
-        }`}
-      >
-        <div className="work-chat-area">
-          <ChatWorkspace
-            onViewPlan={() => setIsPreviewOpen(true)}
-            placeholder="Continue this work or ask In0 a question..."
-          />
-        </div>
-
-        {isPreviewOpen && (
-          <PreviewPanel
-            title="Work Plan"
-            mode="plan"
-            onClose={() => setIsPreviewOpen(false)}
-          >
-            <PlanPreview
-              progress={work.progress}
-              steps={planSteps}
-            />
-
-            <div className="preview-section">
-              <span className="preview-section-title">
-                Current Step
-              </span>
-
-              <div className="preview-card">
-                <strong>Process HR task</strong>
-
-                <p>
-                  The current step is being processed. Review the
-                  conversation for the latest information.
-                </p>
-              </div>
-            </div>
-          </PreviewPanel>
-        )}
+      <div className="space-y-4 overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <WorkStepsTable
+          steps={getWorkSteps(work)}
+          hasConflict={work.status === 'conflict'}
+        />
       </div>
     </section>
   );
-}
-
-function getStatusLabel(status: string) {
-  switch (status) {
-    case 'in-progress':
-      return 'In Progress';
-    case 'waiting-approval':
-      return 'Waiting for Approval';
-    case 'completed':
-      return 'Completed';
-    case 'permission-required':
-      return 'Permission Required';
-    case 'conflict':
-      return 'Conflict';
-    default:
-      return status;
-  }
 }
 
 export default WorkDetail;

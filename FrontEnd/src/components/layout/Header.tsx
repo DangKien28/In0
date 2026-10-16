@@ -1,28 +1,18 @@
+import NotificationsMenu from './NotificationsMenu';
+import UserMenu from './UserMenu';
+
 function Header() {
   return (
-    <header className="app-header">
-      <div className="header-left">
-        <span className="logo">In0</span>
-        <span className="header-context">AI Assistant</span>
+    <header className="z-20 flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6">
+      <div className="flex items-center gap-3">
+        <span className="hidden text-xs text-slate-400 sm:inline">
+          Capstone C1SE.41 • Trường Quốc tế, ĐH Duy Tân
+        </span>
       </div>
 
-      <div className="header-right">
-        <button
-          type="button"
-          className="icon-button"
-          aria-label="Notifications"
-        >
-          🔔
-        </button>
-
-        <div className="user-menu">
-          <div className="user-avatar">HR</div>
-
-          <div className="user-info">
-            <span className="user-name">HR User</span>
-            <span className="user-role">HR</span>
-          </div>
-        </div>
+      <div className="flex items-center gap-3">
+        <NotificationsMenu />
+        <UserMenu />
       </div>
     </header>
   );

@@ -1,136 +1,106 @@
+import { Bot, PanelRight, RotateCcw } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
-import { useState } from 'react';
-
-import type { ChatMessage } from '../../types/chat';
+import { quickSuggestions } from '../../data/mockChat';
+import { useChatFlow } from '../../hooks/useChatFlow';
+import ArtifactPreview from '../preview/ArtifactPreview';
 
 import ChatComposer from './ChatComposer';
-import ChatMessageComponent from './ChatMessage';
+import ChatMessage from './ChatMessage';
+import MiniStepsBar from './MiniStepsBar';
 
-interface ChatWorkspaceProps {
-  onViewPlan?: () => void;
-  initialMessage?: string;
-  placeholder?: string;
-}
+/** Chat & WORK execution view: header, mini stepper, conversation, artifact panel. */
+function ChatWorkspace() {
+  const {
+    messages,
+    isResponding,
+    isArtifactPanelOpen,
+    activeArtifact,
+    sendMessage,
+    startNewChat,
+    toggleArtifactPanel,
+  } = useChatFlow();
+  const messagesRef = useRef<HTMLDivElement>(null);
 
-function ChatWorkspace({
-  onViewPlan,
-  initialMessage,
-  placeholder = 'Describe what you want In0 to do...',
-}: ChatWorkspaceProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isResponding, setIsResponding] = useState(false);
+  useEffect(() => {
+    const container = messagesRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  }, [messages, isResponding]);
 
-  const handleSend = (content: string, file?: File) => {
-    if (isResponding) {
-      return;
-    }
-
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: content || 'Attached a file',
-      timestamp: 'Just now',
-      attachment: file
-        ? {
-            name: file.name,
-            type: file.type,
-          }
-        : undefined,
-    };
-
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      userMessage,
-    ]);
-
-    setIsResponding(true);
-
-    // Temporary prototype response.
-    // The real AI integration will be added later.
-    window.setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content:
-          'I have received your request. You can review the proposed plan before proceeding.',
-        timestamp: 'Just now',
-      };
-
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        assistantMessage,
-      ]);
-
-      setIsResponding(false);
-    }, 500);
-  };
-
-  const handleSuggestedRequest = (request: string) => {
-    handleSend(request);
+  const handleSend = (text: string, file?: File) => {
+    sendMessage(text, file ? { name: file.name, type: file.type } : undefined);
   };
 
   return (
-    <div className="chat-workspace">
-      <div className="chat-messages">
-        {messages.length === 0 ? (
-          <div className="chat-empty-state">
-            <div className="chat-empty-icon">✦</div>
-
-            <h2>How can I help?</h2>
-
-            <p>
-              Describe a task and In0 will help you create a plan
-              and execute it.
-            </p>
-
-            {initialMessage && (
-              <button
-                type="button"
-                className="suggestion-button"
-                onClick={() => handleSuggestedRequest(initialMessage)}
-              >
-                {initialMessage}
-              </button>
-            )}
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col gap-2 overflow-hidden">
+      <div className="flex shrink-0 items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-2 shadow-2xs">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 font-bold text-blue-700">
+            <Bot className="h-4 w-4" />
           </div>
-        ) : (
-          <>
-            {messages.map((message) => (
-              <ChatMessageComponent
-                key={message.id}
-                message={message}
-              />
-            ))}
+          <div>
+            <h2 className="text-xs font-bold text-slate-900">
+              In0 Trợ lý Tuyển dụng & Onboarding
+            </h2>
+            <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-600">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />{' '}
+              Sẵn sàng điều phối
+            </span>
+          </div>
+        </div>
 
-            {messages.some(
-              (message) => message.role === 'assistant',
-            ) && (
-              <div className="chat-plan-action">
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={onViewPlan}
-                >
-                  View Plan
-                </button>
-              </div>
-            )}
-
-            {isResponding && (
-              <p className="chat-typing-indicator">
-                In0 is preparing a response...
-              </p>
-            )}
-          </>
-        )}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleArtifactPanel}
+            aria-pressed={isArtifactPanelOpen}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-blue-600"
+          >
+            <PanelRight className="h-3.5 w-3.5" />
+            <span>{isArtifactPanelOpen ? 'Đóng Artifact' : 'Mở Artifact'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={startNewChat}
+            className="flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Tạo mới
+          </button>
+        </div>
       </div>
 
-      <ChatComposer
-        onSend={handleSend}
-        placeholder={placeholder}
-        disabled={isResponding}
-      />
-    </div>
+      <MiniStepsBar />
+
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden lg:flex-row">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition-all duration-300">
+          <div
+            ref={messagesRef}
+            className="scroll-panel flex-1 space-y-4 p-4"
+            aria-live="polite"
+          >
+            {messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
+            ))}
+
+            {isResponding && (
+              <p className="pl-10 text-[11px] text-slate-400 italic">
+                In0 đang soạn phản hồi...
+              </p>
+            )}
+          </div>
+
+          <ChatComposer
+            onSend={handleSend}
+            suggestions={quickSuggestions}
+            disabled={isResponding}
+          />
+        </div>
+
+        {isArtifactPanelOpen && activeArtifact !== null && (
+          <ArtifactPreview target={activeArtifact} />
+        )}
+      </div>
+    </section>
   );
 }
 
